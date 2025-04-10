@@ -104,17 +104,17 @@ export const TaskDisplay = ({ tasks, onTaskCompletion, onGoalDecomposition }) =>
   };
 
   const handleSaveTask = (taskId) => {
-        // Implement save functionality here, e.g., updating state or sending to an API
-        onGoalDecomposition(prevTasks =>
-          prevTasks.map(task =>
-            task.id === taskId ? { ...editedTask } : task
-          )
-        );
-        setEditingTaskId(null);
+    // Implement save functionality here, e.g., updating state or sending to an API
+    onGoalDecomposition(prevTasks =>
+      prevTasks.map(task =>
+        task.id === taskId ? { ...editedTask } : task
+      )
+    );
+    setEditingTaskId(null);
   };
 
   const handleDeleteTask = (taskId) => {
-        onGoalDecomposition(prevTasks => prevTasks.filter(task => task.id !== taskId));
+    onGoalDecomposition(prevTasks => prevTasks.filter(task => task.id !== taskId));
   };
 
   const handleInputChange = (e, field) => {
