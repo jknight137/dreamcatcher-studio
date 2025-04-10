@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState } from 'react';
@@ -7,21 +6,48 @@ import { TaskDisplay } from '@/components/TaskDisplay';
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input";
 
 export default function Home() {
-  const [tasks, setTasks] = useState([]);
+  const [dreams, setDreams] = useState([]);
+  const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
+  const [view, setView] = useState("dreams"); // "dreams" | "tasks"
+
+  const handleDreamCreation = (newDream) => {
+    setDreams([...dreams, newDream]);
+  };
+
+  const handleDreamSelection = (dream) => {
+    setActiveDream(dream);
+    setView("tasks");
+  };
 
   const handleGoalDecomposition = (newTasks) => {
-    setTasks(newTasks);
+    const updatedDreams = dreams.map(dream =>
+      dream === activeDream ? { ...dream, tasks: newTasks } : dream
+    );
+    setDreams(updatedDreams);
+
+    // Update the active dream to reflect the changes
+    setActiveDream(updatedDreams.find(dream => dream === activeDream));
+
     updateProgress(newTasks);
   };
 
   const handleTaskCompletion = (taskId) => {
-    const updatedTasks = tasks.map((task) =>
+    const updatedTasks = activeDream.tasks.map((task) =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     );
-    setTasks(updatedTasks);
+
+    const updatedDreams = dreams.map(dream =>
+      dream === activeDream ? { ...dream, tasks: updatedTasks } : dream
+    );
+    setDreams(updatedDreams);
+
+    // Update the active dream to reflect the changes
+    setActiveDream(updatedDreams.find(dream => dream === activeDream));
+
     updateProgress(updatedTasks);
   };
 
@@ -32,18 +58,50 @@ export default function Home() {
     setProgress(newProgress);
   };
 
+  const renderDreamsView = () => (
+    <div>
+      <h2 className="text-xl font-bold mb-4">Your Dreams</h2>
+      <GoalInput onGoalDecomposition={handleDreamCreation} isDreamCreation={true} />
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {dreams.map((dream, index) => (
+          <Card key={index} onClick={() => handleDreamSelection(dream)} className="cursor-pointer">
+            <CardHeader>
+              <CardTitle>{dream.goal}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Created At: {new Date(dream.createdAt).toLocaleDateString()}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  const renderTaskOverview = () => (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <Button onClick={() => setView("dreams")}>Back to Dreams</Button>
+          {activeDream && <h1 className="text-2xl font-bold ml-4">Dream: {activeDream.goal}</h1>}
+        </div>
+        <div>
+            <Progress value={progress} />
+            <p className="text-sm text-muted-foreground">Tasks Completed: {progress}%</p>
+        </div>
+      </div>
+      {activeDream && (
+        <TaskDisplay
+          tasks={activeDream.tasks || []}
+          onTaskCompletion={handleTaskCompletion}
+          onGoalDecomposition={handleGoalDecomposition}
+        />
+      )}
+    </div>
+  );
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">DreamCatcher</h1>
-      <GoalInput onGoalDecomposition={handleGoalDecomposition} />
-      <div className="mb-4">
-          <Progress value={progress} />
-          <p className="text-sm text-muted-foreground">Goals Completed: {progress}%</p>
-      </div>
-      <TaskDisplay tasks={tasks} onTaskCompletion={handleTaskCompletion} />
+      {view === "dreams" ? renderDreamsView() : renderTaskOverview()}
     </div>
   );
 }
-
-

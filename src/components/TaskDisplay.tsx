@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useEffect } from 'react';
@@ -24,7 +23,7 @@ const getMatrixCategory = (task) => {
   }
 };
 
-export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
+export const TaskDisplay = ({ tasks, onTaskCompletion, onGoalDecomposition }) => {
   const [prioritizedTasks, setPrioritizedTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [editingTaskId, setEditingTaskId] = useState(null);
@@ -37,7 +36,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
       try {
         // Map the tasks to the PrioritizeTasksInput format
         const inputTasks = tasks.map(task => ({
-          id: task.title, // Use task title as ID for now
+          id: task.id, // Use task title as ID for now
           title: task.title,
           urgency: task.urgency,
           importance: task.importance,
@@ -66,7 +65,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
       try {
         // Map the tasks to the PrioritizeTasksInput format
         const inputTasks = tasks.map(task => ({
-          id: task.title, // Use task title as ID for now
+          id: task.id, // Use task title as ID for now
           title: task.title,
           urgency: task.urgency,
           importance: task.importance,
@@ -106,7 +105,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
 
   const handleSaveTask = (taskId) => {
         // Implement save functionality here, e.g., updating state or sending to an API
-        setTasks(prevTasks =>
+        onGoalDecomposition(prevTasks =>
           prevTasks.map(task =>
             task.id === taskId ? { ...editedTask } : task
           )
@@ -115,7 +114,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
   };
 
   const handleDeleteTask = (taskId) => {
-        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+        onGoalDecomposition(prevTasks => prevTasks.filter(task => task.id !== taskId));
   };
 
   const handleInputChange = (e, field) => {
@@ -126,8 +125,8 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
 
   // Sort tasks based on priority score
   const sortedTasks = [...tasks].sort((a, b) => {
-    const priorityA = prioritizedTasks.find(pt => pt.id === a.title)?.priorityScore || 0;
-    const priorityB = prioritizedTasks.find(pt => pt.id === b.title)?.priorityScore || 0;
+    const priorityA = prioritizedTasks.find(pt => pt.id === a.id)?.priorityScore || 0;
+    const priorityB = prioritizedTasks.find(pt => pt.id === b.id)?.priorityScore || 0;
     return priorityB - priorityA;
   });
 
@@ -142,22 +141,22 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
       <h3 className="text-lg font-semibold mt-4">Suggested Tasks</h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
         {sortedTasks.map(task => (
-            <Card key={task.title}>
+            <Card key={task.id}>
               <CardHeader>
                 <CardTitle>{task.title}</CardTitle>
                 <CardDescription>
-                    {prioritizedTasks.find(pt => pt.id === task.title)?.reason || "No reason provided."}
+                    {prioritizedTasks.find(pt => pt.id === task.id)?.reason || "No reason provided."}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                  <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={`task-${task.title}`}
+                        id={`task-${task.id}`}
                         defaultChecked={task.completed}
-                        onCheckedChange={() => onTaskCompletion(task.title)}
+                        onCheckedChange={() => onTaskCompletion(task.id)}
                       />
-                      <Label htmlFor={`task-${task.title}`}>Completed</Label>
+                      <Label htmlFor={`task-${task.id}`}>Completed</Label>
                     </div>
                     <p>Urgency: {task.urgency}</p>
                     <p>Importance: {task.importance}</p>
@@ -183,22 +182,22 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
           <div key={category}>
             <h4 className="text-md font-semibold">{category}</h4>
             {tasks.map(task => (
-              <Card key={task.title}>
+              <Card key={task.id}>
                 <CardHeader>
                   <CardTitle>{task.title}</CardTitle>
                   <CardDescription>
-                    {prioritizedTasks.find(pt => pt.id === task.title)?.reason || "No reason provided."}
+                    {prioritizedTasks.find(pt => pt.id === task.id)?.reason || "No reason provided."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                  <div className="space-y-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id={`task-${task.title}`}
+                        id={`task-${task.id}`}
                         defaultChecked={task.completed}
-                        onCheckedChange={() => onTaskCompletion(task.title)}
+                        onCheckedChange={() => onTaskCompletion(task.id)}
                       />
-                      <Label htmlFor={`task-${task.title}`}>Completed</Label>
+                      <Label htmlFor={`task-${task.id}`}>Completed</Label>
                     </div>
                     <p>Urgency: {task.urgency}</p>
                     <p>Importance: {task.importance}</p>
@@ -294,4 +293,3 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
     </div>
   );
 };
-
