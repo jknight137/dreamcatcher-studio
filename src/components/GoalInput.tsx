@@ -8,6 +8,11 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 
+// Function to generate a unique ID
+const generateUniqueId = () => {
+  return Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+};
+
 export const GoalInput = ({ onGoalDecomposition }) => {
   const [goal, setGoal] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -20,7 +25,9 @@ export const GoalInput = ({ onGoalDecomposition }) => {
     setIsLoading(true);
     try {
       const result = await goalDecomposition({ goal });
-      onGoalDecomposition(result.tasks);
+      // Add a unique ID to each task
+      const tasksWithIds = result.tasks.map(task => ({ ...task, id: generateUniqueId() }));
+      onGoalDecomposition(tasksWithIds);
     } catch (error) {
       console.error("Error decomposing goal:", error);
       alert("Failed to decompose goal. Please try again.");
@@ -67,3 +74,4 @@ export const GoalInput = ({ onGoalDecomposition }) => {
     </div>
   );
 };
+

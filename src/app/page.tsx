@@ -14,31 +14,35 @@ export default function Home() {
 
   const handleGoalDecomposition = (newTasks) => {
     setTasks(newTasks);
+    updateProgress(newTasks);
   };
 
   const handleTaskCompletion = (taskId) => {
-    // Update the tasks state when a task is completed.
-    setTasks((prevTasks) =>
-      prevTasks.map((task) =>
-        task.id === taskId ? { ...task, completed: !task.completed } : task
-      )
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? { ...task, completed: !task.completed } : task
     );
-    // Update progress
-    const completedTasks = tasks.filter((task) => task.completed).length;
-    const totalTasks = tasks.length;
+    setTasks(updatedTasks);
+    updateProgress(updatedTasks);
+  };
+
+  const updateProgress = (currentTasks) => {
+    const completedTasks = currentTasks.filter((task) => task.completed).length;
+    const totalTasks = currentTasks.length;
     const newProgress = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
     setProgress(newProgress);
   };
+
 
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">GoalFlow</h1>
       <GoalInput onGoalDecomposition={handleGoalDecomposition} />
-      <div>
+      <div className="mb-4">
           <Progress value={progress} />
-          <p>{progress}%</p>
+          <p className="text-sm text-muted-foreground">Goals Completed: {progress}%</p>
       </div>
       <TaskDisplay tasks={tasks} onTaskCompletion={handleTaskCompletion} />
     </div>
   );
 }
+

@@ -7,6 +7,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Checkbox } from "@/components/ui/checkbox"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Trash2, Edit } from "lucide-react";
 
 const getMatrixCategory = (task) => {
   if (task.urgency === 'High' && task.importance === 'High') {
@@ -23,6 +27,9 @@ const getMatrixCategory = (task) => {
 export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
   const [prioritizedTasks, setPrioritizedTasks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editedTask, setEditedTask] = useState({});
+
 
   useEffect(() => {
     const prioritize = async () => {
@@ -92,6 +99,29 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
     return categorized;
   };
 
+  const handleEditTask = (task) => {
+      setEditingTaskId(task.id);
+      setEditedTask(task);
+  };
+
+  const handleSaveTask = (taskId) => {
+        // Implement save functionality here, e.g., updating state or sending to an API
+        setTasks(prevTasks =>
+          prevTasks.map(task =>
+            task.id === taskId ? { ...editedTask } : task
+          )
+        );
+        setEditingTaskId(null);
+  };
+
+  const handleDeleteTask = (taskId) => {
+        setTasks(prevTasks => prevTasks.filter(task => task.id !== taskId));
+  };
+
+  const handleInputChange = (e, field) => {
+      setEditedTask({ ...editedTask, [field]: e.target.value });
+  };
+
   const categorizedTasks = categorizeTasks();
 
   // Sort tasks based on priority score
@@ -134,13 +164,21 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
                     <p>Due Date: {task.dueDate}</p>
                     <p>Impact: {task.impact}</p>
                   </div>
+                    <Button variant="secondary" size="sm" onClick={() => handleEditTask(task)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteTask(task.id)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
               </CardContent>
             </Card>
         ))}
       </div>
 
       <h3 className="text-lg font-semibold mt-4">Eisenhower Matrix</h3>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         {Object.entries(categorizedTasks).map(([category, tasks]) => (
           <div key={category}>
             <h4 className="text-md font-semibold">{category}</h4>
@@ -167,12 +205,93 @@ export const TaskDisplay = ({ tasks, onTaskCompletion }) => {
                     <p>Due Date: {task.dueDate}</p>
                     <p>Impact: {task.impact}</p>
                   </div>
+                    <Button variant="secondary" size="sm" onClick={() => handleEditTask(task)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Edit
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDeleteTask(task.id)}>
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      Delete
+                    </Button>
                 </CardContent>
               </Card>
             ))}
           </div>
         ))}
       </div>
+          {/* Edit Task Modal */}
+          {editingTaskId && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex justify-center items-center">
+                <Card className="max-w-md w-full p-4">
+                  <CardHeader>
+                    <CardTitle>Edit Task</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="title">Title</Label>
+                        <Input
+                          id="title"
+                          value={editedTask.title || ""}
+                          onChange={(e) => handleInputChange(e, 'title')}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="urgency">Urgency</Label>
+                        <Select value={editedTask.urgency} onValueChange={(e) => setEditedTask({...editedTask, urgency: e})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Urgency" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="importance">Importance</Label>
+                         <Select value={editedTask.importance} onValueChange={(e) => setEditedTask({...editedTask, importance: e})}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Importance" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="High">High</SelectItem>
+                            <SelectItem value="Medium">Medium</SelectItem>
+                            <SelectItem value="Low">Low</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="dueDate">Due Date</Label>
+                        <Input
+                          type="date"
+                          id="dueDate"
+                          value={editedTask.dueDate || ""}
+                          onChange={(e) => handleInputChange(e, 'dueDate')}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="impact">Impact</Label>
+                        <Input
+                          type="number"
+                          id="impact"
+                          value={editedTask.impact || ""}
+                          onChange={(e) => handleInputChange(e, 'impact')}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex justify-end mt-4">
+                      <Button variant="ghost" onClick={() => setEditingTaskId(null)}>
+                        Cancel
+                      </Button>
+                      <Button onClick={() => handleSaveTask(editingTaskId)}>Save</Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            )}
     </div>
   );
 };
+
