@@ -1,7 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, FirebaseFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -15,23 +15,34 @@ const firebaseConfig = {
 
 // Check if all required environment variables are present
 const hasFirebaseConfig =
-  firebaseConfig.apiKey &&
-  firebaseConfig.authDomain &&
-  firebaseConfig.projectId &&
-  firebaseConfig.storageBucket &&
-  firebaseConfig.messagingSenderId &&
-  firebaseConfig.appId &&
-  firebaseConfig.measurementId;
+  !!firebaseConfig.apiKey &&
+  !!firebaseConfig.authDomain &&
+  !!firebaseConfig.projectId &&
+  !!firebaseConfig.storageBucket &&
+  !!firebaseConfig.messagingSenderId &&
+  !!firebaseConfig.appId &&
+  !!firebaseConfig.measurementId;
 
 // Initialize Firebase
-let firebaseApp;
-if (hasFirebaseConfig) {
-  firebaseApp = initializeApp(firebaseConfig);
-} else {
-  console.error("Firebase configuration is incomplete. Check your environment variables.");
+let firebaseApp = null;
+let analytics = null;
+let auth: Auth = null;
+let db: FirebaseFirestore = null;
+
+try {
+  if (hasFirebaseConfig) {
+    firebaseApp = initializeApp(firebaseConfig);
+    analytics = getAnalytics(firebaseApp);
+    auth = getAuth(firebaseApp);
+    db = getFirestore(firebaseApp);
+  } else {
+    const errorMessage = "Firebase configuration is incomplete. Check your environment variables.";
+    console.error(errorMessage);
+    // Removed throwing an error, which was crashing the app.
+    // Instead, the app will now run, but Firebase features will be unavailable.
+  }
+} catch (e) {
+  console.error("Error initializing Firebase:", e);
 }
 
-// const analytics = getAnalytics(app);
-export const auth = firebaseApp ? getAuth(firebaseApp) : null;
-export const db = firebaseApp ? getFirestore(firebaseApp) : null;
-export { firebaseApp };
+export { firebaseApp, analytics, auth, db };

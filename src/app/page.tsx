@@ -21,14 +21,14 @@ import {
 } from 'firebase/firestore';
 import { firebaseApp } from '../lib/firebase';
 
-const db = getFirestore(firebaseApp);
-
+let db;
 
 export default function Home() {
   const [dreams, setDreams] = useState([]);
   const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [view, setView] = useState<"dreams" | "tasks">("dreams"); // "dreams" | "tasks"
+  const [view, setView<"dreams" | "tasks">("dreams");
+
   const { user, logOut } = useUserAuth();
     const router = useRouter();
 
@@ -38,34 +38,27 @@ export default function Home() {
         }
     }, [user, router]);
 
-    const handleLogOut = async () => {
-        try {
-            await logOut();
-            router.push('/login');
-        } catch (error) {
-            console.log(error);
-        }
-    };
-
-
     useEffect(() => {
         if (!user?.uid) {
             console.warn("User ID not set. Ensure user is authenticated.");
             return;
         }
 
-        const dreamsCollection = collection(db, `users/${user.uid}/dreams`);
-      const q = query(dreamsCollection, orderBy('createdAt', 'desc'));
+        if (firebaseApp) {
+          db = getFirestore(firebaseApp);
+          const dreamsCollection = collection(db, `users/${user.uid}/dreams`);
+          const q = query(dreamsCollection, orderBy('createdAt', 'desc'));
 
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const fetchedDreams = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setDreams(fetchedDreams);
-        });
+          const unsubscribe = onSnapshot(q, (snapshot) => {
+              const fetchedDreams = snapshot.docs.map(doc => ({
+                  id: doc.id,
+                  ...doc.data()
+              }));
+              setDreams(fetchedDreams);
+          });
 
-        return () => unsubscribe();
+          return () => unsubscribe();
+        }
     }, [user?.uid]);
 
 
