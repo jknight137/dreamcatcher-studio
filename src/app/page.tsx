@@ -35,7 +35,7 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">GoalFlow</h1>
+      <h1 className="text-2xl font-bold mb-4">DreamCatcher</h1>
       <GoalInput onGoalDecomposition={handleGoalDecomposition} />
       <div className="mb-4">
           <Progress value={progress} />
@@ -45,4 +45,5 @@ export default function Home() {
     </div>
   );
 }
+
 
