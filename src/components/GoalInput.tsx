@@ -134,7 +134,9 @@ export const GoalInput = ({ onGoalDecomposition, isDreamCreation = false }) => {
         <Button onClick={handleDecomposeGoal} disabled={isLoading}>
           {isLoading ? "Processing..." : (isDreamCreation ? "Create Dream" : "Decompose Dream")}
         </Button>
-        <Button onClick={handleVoiceInput} disabled={isLoading || !SpeechRecognition}>
+        <Button
+          onClick={handleVoiceInput}
+          disabled={isLoading || (typeof window !== 'undefined' && !window.SpeechRecognition && !window.webkitSpeechRecognition)}>
           {isLoading ? "Listening..." : "Voice Input"}
         </Button>
       </div>

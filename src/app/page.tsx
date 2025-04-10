@@ -12,10 +12,21 @@ export default function Home() {
   const [dreams, setDreams] = useState([]);
   const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [view, setView] = useState("dreams"); // "dreams" | "tasks"
+  const [view, setView] = useState<"dreams" | "tasks">("dreams");
 
-  const handleDreamCreation = (newDream) => {
-    setDreams([...dreams, newDream]);
+  const handleDreamCreation = async (newDream) => {
+    // setDreams([...dreams, newDream]);
+    //setActiveDream(newDream); // Automatically switch to the new dream
+    //setView("tasks");
+
+      const updatedDreams = [...dreams, newDream];
+      setDreams(updatedDreams);
+      setActiveDream(newDream);
+      setView("tasks");
+
+    // Update the active dream to reflect the changes
+    // setActiveDream(updatedDreams.find(dream => dream === activeDream));
+
   };
 
   const handleDreamSelection = (dream) => {
@@ -36,7 +47,7 @@ export default function Home() {
   };
 
   const handleTaskCompletion = (taskId) => {
-    const updatedTasks = activeDream.tasks.map((task) =>
+    const updatedTasks = activeDream?.tasks?.map((task) =>
       task.id === taskId ? { ...task, completed: !task.completed } : task
     );
 
@@ -52,6 +63,7 @@ export default function Home() {
   };
 
   const updateProgress = (currentTasks) => {
+    if (!currentTasks) return;
     const completedTasks = currentTasks.filter((task) => task.completed).length;
     const totalTasks = currentTasks.length;
     const newProgress = totalTasks === 0 ? 0 : (completedTasks / totalTasks) * 100;
@@ -105,3 +117,4 @@ export default function Home() {
     </div>
   );
 }
+
