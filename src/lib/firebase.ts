@@ -1,7 +1,16 @@
 import { initializeApp } from "firebase/app";
 import { getAnalytics } from "firebase/analytics";
 import { getAuth, Auth } from "firebase/auth";
-import { getFirestore, FirebaseFirestore } from "firebase/firestore";
+import { getFirestore, Firestore } from "firebase/firestore";
+
+// Log environment variables for debugging
+console.log("API Key:", process.env.NEXT_PUBLIC_FIREBASE_API_KEY);
+console.log("Auth Domain:", process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN);
+console.log("Project ID:", process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID);
+console.log("Storage Bucket:", process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET);
+console.log("Messaging Sender ID:", process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID);
+console.log("App ID:", process.env.NEXT_PUBLIC_FIREBASE_APP_ID);
+console.log("Measurement ID:", process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID);
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -10,39 +19,37 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID,
 };
 
-// Check if all required environment variables are present
+// Check if required environment variables are present (measurementId is optional)
 const hasFirebaseConfig =
   !!firebaseConfig.apiKey &&
   !!firebaseConfig.authDomain &&
   !!firebaseConfig.projectId &&
   !!firebaseConfig.storageBucket &&
   !!firebaseConfig.messagingSenderId &&
-  !!firebaseConfig.appId &&
-  !!firebaseConfig.measurementId;
+  !!firebaseConfig.appId;
 
-// Initialize Firebase
 let firebaseApp = null;
 let analytics = null;
-let auth: Auth = null;
-let db: FirebaseFirestore = null;
+export let auth: Auth | null = null;
+export let db: Firestore | null = null;
 
-try {
-  if (hasFirebaseConfig) {
+if (hasFirebaseConfig) {
+  try {
     firebaseApp = initializeApp(firebaseConfig);
-    analytics = getAnalytics(firebaseApp);
+    if (firebaseConfig.measurementId) {
+      analytics = getAnalytics(firebaseApp); // Only initialize if measurementId exists
+    }
     auth = getAuth(firebaseApp);
     db = getFirestore(firebaseApp);
-  } else {
-    const errorMessage = "Firebase configuration is incomplete. Check your environment variables.";
-    console.error(errorMessage);
-    // Removed throwing an error, which was crashing the app.
-    // Instead, the app will now run, but Firebase features will be unavailable.
+    console.log("Firebase initialized successfully");
+  } catch (e) {
+    console.error("Error initializing Firebase:", e);
   }
-} catch (e) {
-  console.error("Error initializing Firebase:", e);
+} else {
+  console.error("Firebase configuration is incomplete. Check your environment variables.");
 }
 
-export { firebaseApp, analytics, auth, db };
+export { firebaseApp, analytics };

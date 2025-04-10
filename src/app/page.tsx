@@ -27,7 +27,7 @@ export default function Home() {
   const [dreams, setDreams] = useState([]);
   const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [view, setView<"dreams" | "tasks">("dreams");
+  const [view, setView] = useState<"dreams" | "tasks">("dreams");
 
   const { user, logOut } = useUserAuth();
     const router = useRouter();
