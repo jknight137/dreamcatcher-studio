@@ -57,7 +57,7 @@ export const GoalInput = ({ onGoalDecomposition }) => {
     <div className="mb-4">
       <div className="flex gap-2 mb-2">
         <Textarea
-          placeholder="Enter your goal here"
+          placeholder="Enter your dream here"
           value={goal}
           onChange={handleGoalChange}
           className="flex-grow"
