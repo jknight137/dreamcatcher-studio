@@ -53,22 +53,15 @@ export default function Home() {
 
 
 
-  const handleDreamCreation = async (newDream) => {
+  const handleDreamCreation = async (newDream, tasks) => {
     try {
       const dreamsCollection = collection(db, `users/${userId}/dreams`);
-      const docRef = await addDoc(dreamsCollection, newDream);
+      const docRef = await addDoc(dreamsCollection, { ...newDream, tasks: tasks }); // Include tasks in the initial document
+
       console.log("Dream created with ID: ", docRef.id);
-      // setDreams([...dreams, newDream]);
-      //setActiveDream(newDream); // Automatically switch to the new dream
-      //setView("tasks");
 
-    //   const updatedDreams = [...dreams, newDream];
-    //   setDreams(updatedDreams);
-      setActiveDream({ id: docRef.id, ...newDream });
+      setActiveDream({ id: docRef.id, ...newDream, tasks: tasks }); // Set tasks to active dream
       setView("tasks");
-
-    // Update the active dream to reflect the changes
-    // setActiveDream(updatedDreams.find(dream => dream === activeDream));
 
     } catch (e) {
       console.error("Error adding dream: ", e);
@@ -146,7 +139,7 @@ export default function Home() {
 
   const renderDreamsView = () => (
     <div>
-      <h2 className="text-xl font-bold mb-4">Your Dreams</h2>
+      <h2 className="text-xl font-bold mb-4">Enter a Dream</h2>
       <GoalInput onGoalDecomposition={handleDreamCreation} isDreamCreation={true} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {dreams.map((dream) => (

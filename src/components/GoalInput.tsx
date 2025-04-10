@@ -68,14 +68,17 @@ export const GoalInput = ({ onGoalDecomposition, isDreamCreation = false }) => {
     setIsLoading(true);
     try {
       if (isDreamCreation) {
+
+        const result = await goalDecomposition({ goal });
+        // Add a unique ID to each task
+        const tasksWithIds = result.tasks.map(task => ({ ...task, id: generateUniqueId() }));
+
         // Create a new dream object
         const newDream = {
           goal: goal,
           createdAt: new Date().toISOString(), // Capture creation timestamp
-          tasks: [], // Initialize with an empty array of tasks
-          //id: generateUniqueId(),
         };
-        onGoalDecomposition(newDream); // Pass the new dream object
+        onGoalDecomposition(newDream, tasksWithIds); // Pass the new dream object and tasks
 
       } else {
         const result = await goalDecomposition({ goal });
