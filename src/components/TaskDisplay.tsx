@@ -132,7 +132,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion, onGoalDecomposition }) =>
   });
 
   return (
-    <div>
+    <>
       <h2 className="text-xl font-semibold mb-2">Task Overview</h2>
 
         <Button onClick={handleRePrioritize} disabled={isLoading}>
@@ -276,6 +276,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion, onGoalDecomposition }) =>
                 
               
             )}
-    </div>
+    </>
   );
 };
+
