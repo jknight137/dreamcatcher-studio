@@ -132,7 +132,7 @@ export const TaskDisplay = ({ tasks, onTaskCompletion, onGoalDecomposition }) =>
     <div>
       <h2 className="text-xl font-semibold mb-2">Task Overview</h2>
       <Button onClick={handleRePrioritize} disabled={isLoading}>
-        {isLoading ? "Re-prioritizing..." : "Re-prioritize Tasks"}
+        {isLoading ? "Prioritizing..." : "Make Dream Real."}
       </Button>
 
       <h3 className="text-lg font-semibold mt-4">Suggested Tasks</h3>
