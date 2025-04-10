@@ -1,31 +1,78 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { GoalInput } from '@/components/GoalInput';
 import { TaskDisplay } from '@/components/TaskDisplay';
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input";
+
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  onSnapshot,
+  doc,
+  deleteDoc,
+  updateDoc,
+} from 'firebase/firestore';
+import { firebaseApp } from '../lib/firebase';
+
+const db = getFirestore(firebaseApp);
+
 
 export default function Home() {
   const [dreams, setDreams] = useState([]);
   const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
   const [view, setView] = useState<"dreams" | "tasks">("dreams");
+  // const [userId, setUserId] = useState("testUser"); // Placeholder user ID
+
+    // Placeholder user ID - Replace with actual authentication logic
+  const userId = "testUser";
+
+
+    useEffect(() => {
+        if (!userId) {
+            console.warn("User ID not set. Ensure user is authenticated.");
+            return;
+        }
+
+        const dreamsCollection = collection(db, `users/${userId}/dreams`);
+
+        const unsubscribe = onSnapshot(dreamsCollection, (snapshot) => {
+            const fetchedDreams = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setDreams(fetchedDreams);
+        });
+
+        return () => unsubscribe();
+    }, [userId]);
+
+
 
   const handleDreamCreation = async (newDream) => {
-    // setDreams([...dreams, newDream]);
-    //setActiveDream(newDream); // Automatically switch to the new dream
-    //setView("tasks");
+    try {
+      const dreamsCollection = collection(db, `users/${userId}/dreams`);
+      const docRef = await addDoc(dreamsCollection, newDream);
+      console.log("Dream created with ID: ", docRef.id);
+      // setDreams([...dreams, newDream]);
+      //setActiveDream(newDream); // Automatically switch to the new dream
+      //setView("tasks");
 
-      const updatedDreams = [...dreams, newDream];
-      setDreams(updatedDreams);
-      setActiveDream(newDream);
+    //   const updatedDreams = [...dreams, newDream];
+    //   setDreams(updatedDreams);
+      setActiveDream({ id: docRef.id, ...newDream });
       setView("tasks");
 
     // Update the active dream to reflect the changes
     // setActiveDream(updatedDreams.find(dream => dream === activeDream));
+
+    } catch (e) {
+      console.error("Error adding dream: ", e);
+    }
 
   };
 
@@ -34,33 +81,60 @@ export default function Home() {
     setView("tasks");
   };
 
-  const handleGoalDecomposition = (newTasks) => {
-    const updatedDreams = dreams.map(dream =>
-      dream === activeDream ? { ...dream, tasks: newTasks } : dream
-    );
-    setDreams(updatedDreams);
+  const handleGoalDecomposition = async (newTasks) => {
+        if (!activeDream?.id) {
+            console.error("Active dream ID is missing.");
+            return;
+        }
 
-    // Update the active dream to reflect the changes
-    setActiveDream(updatedDreams.find(dream => dream === activeDream));
+        try {
+            const dreamRef = doc(db, `users/${userId}/dreams`, activeDream.id);
+            await updateDoc(dreamRef, { tasks: newTasks });
 
-    updateProgress(newTasks);
-  };
+            // Optimistically update local state
+            const updatedDreams = dreams.map(dream =>
+                dream.id === activeDream.id ? { ...dream, tasks: newTasks } : dream
+            );
+            setDreams(updatedDreams);
 
-  const handleTaskCompletion = (taskId) => {
-    const updatedTasks = activeDream?.tasks?.map((task) =>
-      task.id === taskId ? { ...task, completed: !task.completed } : task
-    );
+            setActiveDream(prevActiveDream => ({ ...prevActiveDream, tasks: newTasks }));
 
-    const updatedDreams = dreams.map(dream =>
-      dream === activeDream ? { ...dream, tasks: updatedTasks } : dream
-    );
-    setDreams(updatedDreams);
+            updateProgress(newTasks);
+        } catch (error) {
+            console.error("Error updating tasks in dream: ", error);
+        }
+    };
 
-    // Update the active dream to reflect the changes
-    setActiveDream(updatedDreams.find(dream => dream === activeDream));
+  const handleTaskCompletion = async (taskId) => {
+        if (!activeDream?.id) {
+            console.error("Active dream ID is missing.");
+            return;
+        }
 
-    updateProgress(updatedTasks);
-  };
+        try {
+            const dreamRef = doc(db, `users/${userId}/dreams`, activeDream.id);
+
+            // Find the task and toggle its completed status
+            const updatedTasks = activeDream.tasks.map(task =>
+                task.id === taskId ? { ...task, completed: !task.completed } : task
+            );
+
+            await updateDoc(dreamRef, { tasks: updatedTasks });
+
+            // Optimistically update local state
+            const updatedDreams = dreams.map(dream =>
+                dream.id === activeDream.id ? { ...dream, tasks: updatedTasks } : dream
+            );
+            setDreams(updatedDreams);
+
+            setActiveDream(prevActiveDream => ({ ...prevActiveDream, tasks: updatedTasks }));
+
+            updateProgress(updatedTasks);
+
+        } catch (error) {
+            console.error("Error updating task completion status: ", error);
+        }
+    };
 
   const updateProgress = (currentTasks) => {
     if (!currentTasks) return;
@@ -75,8 +149,8 @@ export default function Home() {
       <h2 className="text-xl font-bold mb-4">Your Dreams</h2>
       <GoalInput onGoalDecomposition={handleDreamCreation} isDreamCreation={true} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {dreams.map((dream, index) => (
-          <Card key={index} onClick={() => handleDreamSelection(dream)} className="cursor-pointer">
+        {dreams.map((dream) => (
+          <Card key={dream.id} onClick={() => handleDreamSelection(dream)} className="cursor-pointer">
             <CardHeader>
               <CardTitle>{dream.goal}</CardTitle>
             </CardHeader>
@@ -117,4 +191,3 @@ export default function Home() {
     </div>
   );
 }
-

@@ -73,7 +73,7 @@ export const GoalInput = ({ onGoalDecomposition, isDreamCreation = false }) => {
           goal: goal,
           createdAt: new Date().toISOString(), // Capture creation timestamp
           tasks: [], // Initialize with an empty array of tasks
-          id: generateUniqueId(),
+          //id: generateUniqueId(),
         };
         onGoalDecomposition(newDream); // Pass the new dream object
 
