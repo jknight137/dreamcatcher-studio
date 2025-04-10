@@ -6,7 +6,8 @@ import { TaskDisplay } from '@/components/TaskDisplay';
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-
+import { useUserAuth } from "./context/AuthContext";
+import { useRouter } from 'next/navigation';
 import {
   getFirestore,
   collection,
@@ -15,6 +16,8 @@ import {
   doc,
   deleteDoc,
   updateDoc,
+  query,
+  orderBy
 } from 'firebase/firestore';
 import { firebaseApp } from '../lib/firebase';
 
@@ -25,22 +28,36 @@ export default function Home() {
   const [dreams, setDreams] = useState([]);
   const [activeDream, setActiveDream] = useState(null);
   const [progress, setProgress] = useState(0);
-  const [view, setView] = useState<"dreams" | "tasks">("dreams");
-  // const [userId, setUserId] = useState("testUser"); // Placeholder user ID
+  const [view, setView<"dreams" | "tasks">("dreams");
+  const { user, logOut } = useUserAuth();
+    const router = useRouter();
 
-    // Placeholder user ID - Replace with actual authentication logic
-  const userId = "testUser";
+    useEffect(() => {
+        if (!user) {
+            router.push('/login');
+        }
+    }, [user, router]);
+
+    const handleLogOut = async () => {
+        try {
+            await logOut();
+            router.push('/login');
+        } catch (error) {
+            console.log(error);
+        }
+    };
 
 
     useEffect(() => {
-        if (!userId) {
+        if (!user?.uid) {
             console.warn("User ID not set. Ensure user is authenticated.");
             return;
         }
 
-        const dreamsCollection = collection(db, `users/${userId}/dreams`);
+        const dreamsCollection = collection(db, `users/${user.uid}/dreams`);
+      const q = query(dreamsCollection, orderBy('createdAt', 'desc'));
 
-        const unsubscribe = onSnapshot(dreamsCollection, (snapshot) => {
+        const unsubscribe = onSnapshot(q, (snapshot) => {
             const fetchedDreams = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
@@ -49,14 +66,14 @@ export default function Home() {
         });
 
         return () => unsubscribe();
-    }, [userId]);
+    }, [user?.uid]);
 
 
 
   const handleDreamCreation = async (newDream, tasks) => {
     try {
-      const dreamsCollection = collection(db, `users/${userId}/dreams`);
-      const docRef = await addDoc(dreamsCollection, { ...newDream, tasks: tasks }); // Include tasks in the initial document
+      const dreamsCollection = collection(db, `users/${user?.uid}/dreams`);
+      const docRef = await addDoc(dreamsCollection, { ...newDream, tasks: tasks, createdAt: new Date().toISOString() }); // Include tasks in the initial document
 
       console.log("Dream created with ID: ", docRef.id);
 
@@ -81,7 +98,7 @@ export default function Home() {
         }
 
         try {
-            const dreamRef = doc(db, `users/${userId}/dreams`, activeDream.id);
+            const dreamRef = doc(db, `users/${user?.uid}/dreams`, activeDream.id);
             await updateDoc(dreamRef, { tasks: newTasks });
 
             // Optimistically update local state
@@ -105,7 +122,7 @@ export default function Home() {
         }
 
         try {
-            const dreamRef = doc(db, `users/${userId}/dreams`, activeDream.id);
+            const dreamRef = doc(db, `users/${user?.uid}/dreams`, activeDream.id);
 
             // Find the task and toggle its completed status
             const updatedTasks = activeDream.tasks.map(task =>
@@ -139,7 +156,12 @@ export default function Home() {
 
   const renderDreamsView = () => (
     <div>
-      <h2 className="text-xl font-bold mb-4">Enter a Dream</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Enter a Dream</h2>
+        <Button onClick={handleLogOut} variant="secondary">
+          Log Out
+        </Button>
+      </div>
       <GoalInput onGoalDecomposition={handleDreamCreation} isDreamCreation={true} />
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {dreams.map((dream) => (
@@ -180,7 +202,14 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      {view === "dreams" ? renderDreamsView() : renderTaskOverview()}
+      {user?.email ? (
+        <>
+          <div>Currently logged in as: {user.email}</div>
+          {view === "dreams" ? renderDreamsView() : renderTaskOverview()}
+        </>
+      ) : (
+        <div>Loading...</div>
+      )}
     </div>
   );
 }
